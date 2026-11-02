@@ -9,6 +9,10 @@ export type ClassState = {
   activityId?: string | null
   activityKind?: string | null
   updatedAt?: string
+  /* the tutor's live caption: English, with a Chinese translation */
+  caption?: { en: string; zh?: string; src?: string; lang?: string; at?: string }
+  /* the question the tutor has on the screen during a Q&A */
+  qaQuestion?: string | null
 }
 export type ConceptQuestion = {
   level?: string

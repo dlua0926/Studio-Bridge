@@ -1017,12 +1017,20 @@ function LiveView({
   const originalCaption = sourceSlide === 13 || sourceSlide === 14
     ? ["Use research insights to reframe the design problem.", "运用研究洞察重构设计问题。"]
     : slideCaptions[(sourceSlide >= 16 ? sourceSlide + 2 : sourceSlide) - 1] || slideCaptions[0]
-  const captions = remoteActivityId ? remoteActivity?.kind === "discussion" ? slideCaptions[15]
+  const slideCaption = remoteActivityId ? remoteActivity?.kind === "discussion" ? slideCaptions[15]
     : remoteActivity?.kind === "artefact" ? slideCaptions[16]
     : remoteActivity?.kind === "reflection" ? [remoteActivity.spec?.question || "Reflect on your learning.", "回顾你的学习，并分享思考。"]
     : remoteActivity?.kind === "qa" ? ["Share a question with your tutor and classmates.", "向老师和同学提出你的问题。"]
     : ["Use research evidence to answer your tutor’s concept check.", "运用研究证据回答老师发布的概念题。"]
     : activity ? activity.kind === "choice" ? slideCaptions[12] : activity.kind === "rating" ? slideCaptions[13] : activity.kind === "discussion" ? slideCaptions[15] : slideCaptions[16] : originalCaption
+  // The tutor's voice becomes captions: show them (English + Chinese) for 25 seconds after each sentence.
+  const [captionNow, setCaptionNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setCaptionNow(Date.now()), 4000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const tutorCaption = liveMode ? room.state.caption : undefined
+  const captions = tutorCaption?.en && captionNow - Date.parse(tutorCaption.at || "") < 25000 ? [tutorCaption.en, tutorCaption.zh || ""] : slideCaption
   useEffect(() => {
     if (!liveMode) { lastTeacherCommand.current = null; return }
     const command = JSON.stringify([room.state.slide || 1, room.state.activityId || null, room.state.activityKind || null, room.state.updatedAt || null])
@@ -1375,7 +1383,6 @@ function LiveView({
       {questionsOpen && (
         <aside id="live-questions" className="questions-pane" aria-label="Questions sidebar">
           <header className="questions-header">
-            <BulbIcon size={20} />
             <h2>Questions</h2>
             <span className="count-badge">{questionList.length + (liveMode ? 0 : 21)}</span>
           </header>

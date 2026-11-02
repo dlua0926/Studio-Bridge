@@ -306,11 +306,33 @@ export default function TutorActivity({
       </div>
     )
   }
-  if (activity.kind === "qa")
+  if (activity.kind === "qa") {
+    // the question the tutor has on the screen, drawn as the same card as in the Questions panel
+    const shown = room.questions.find((row) => row.id === room.state.qaQuestion)
+    const who = shown ? (shown.anonymous ? "Anonymous" : shown.student || "Student") : ""
+    const minutes = shown ? Math.max(0, Math.floor((Date.now() - new Date(shown.created_at).getTime()) / 60000)) : 0
     return (
       <div className="tutor-activity">
         <span className="eyebrow">Q&amp;A</span>
-        <h3>What’s on your mind?</h3>
+        {shown ? (
+          <article className={shown.status === "ans" ? "question-card qa-spotlight answered" : "question-card qa-spotlight"}>
+            <div className="question-meta">
+              <span className="avatar avatar-1">{who.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}</span>
+              <div>
+                <strong>{who}</strong>
+                <small>{minutes < 1 ? "just now" : `${minutes} min ago`}</small>
+              </div>
+              {shown.status === "ans" && <span className="question-answer-mark" aria-label="Answered">✓</span>}
+            </div>
+            <p className="question-text">{shown.text_en || shown.text}</p>
+            <div className="question-actions">
+              <span>↑ {shown.upvotes}</span>
+              {shown.slide ? <span className="qa-spotlight-slide">Slide {shown.slide} ›</span> : null}
+            </div>
+          </article>
+        ) : (
+          <h3>What’s on your mind?</h3>
+        )}
         <p>
           Ask a question in the Questions panel. Your tutor will see it live.
         </p>
@@ -332,6 +354,7 @@ export default function TutorActivity({
         </button>
       </div>
     )
+  }
   if (activity.kind === "discussion" || activity.kind === "artefact") {
     const saved = own.find((r) => r.kind === "artefact")
     const cardCounts = [0, 0, 0, 0, 0]
